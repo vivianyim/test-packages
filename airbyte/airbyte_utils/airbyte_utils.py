@@ -61,6 +61,3 @@ def update_connection_schemata() -> None:
             update_connection_schema(payload)
         except Exception as exception:
             logging.warning(f"failed to update schema of connection `{connection['name']}`: {exception}")
-
-
-connections_dict = get_connections_dict()

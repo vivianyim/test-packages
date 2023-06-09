@@ -4,7 +4,6 @@ from datetime import timedelta
 
 import yaml
 from airflow.kubernetes.secret import Secret
-from airflow.models import Variable
 from airflow.stats import Stats
 from kubernetes.client import models
 
@@ -21,40 +20,40 @@ class Environment(Abstract):
     prod = "prod"
 
 
-def get_database(name, ENV):
-    if ENV in {Environment.local, Environment.dev}:
+def get_database(name, env):
+    if env in {Environment.local, Environment.dev}:
         name = "dev_" + name
-    elif ENV == Environment.stage:
+    elif env == Environment.stage:
         name = "stage_" + name
     return name.upper()
 
 
-def get_hyak_role_name(ENV):
-    if ENV in {Environment.local, Environment.dev}:
+def get_hyak_role_name(env):
+    if env in {Environment.local, Environment.dev}:
         ROLE_NAME = "hyak-marmalade-import-dev"
-    elif ENV == Environment.stage:
+    elif env == Environment.stage:
         ROLE_NAME = "hyak-marmalade-import-staging"
-    elif ENV == Environment.prod:
+    elif env == Environment.prod:
         ROLE_NAME = "hyak-marmalade-import-prod"
     return ROLE_NAME
 
 
-def get_hyak_campaigns_role_name(ENV):
-    if ENV in {Environment.local, Environment.dev}:
+def get_hyak_campaigns_role_name(env):
+    if env in {Environment.local, Environment.dev}:
         ROLE_NAME = "hyak-campaigns-dev"
-    elif ENV == Environment.stage:
+    elif env == Environment.stage:
         ROLE_NAME = "hyak-campaigns-staging"
-    elif ENV == Environment.prod:
+    elif env == Environment.prod:
         ROLE_NAME = "hyak-campaigns-prod"
     return ROLE_NAME
 
 
-def get_predictive_analysis(ENV):
-    if ENV in {Environment.local, Environment.dev}:
+def get_predictive_analysis(env):
+    if env in {Environment.local, Environment.dev}:
         ROLE_NAME = "hyak-predictive-analysis-dev"
-    elif ENV == Environment.stage:
+    elif env == Environment.stage:
         ROLE_NAME = "hyak-predictive-analysis-dev"
-    elif ENV == Environment.prod:
+    elif env == Environment.prod:
         ROLE_NAME = "hyak-predictive-analysis-prod"
     return ROLE_NAME
 
@@ -179,13 +178,13 @@ def update_recursive(a: dict, b: dict | None):
 
 
 class load_kwargs:
-    def __init__(self, file_path, ENV):
+    def __init__(self, file_path, env):
         with open(file_path) as file:
             config = yaml.safe_load(file)
 
         self.kwargs = config["default"]
 
-        update_recursive(self.kwargs, config[ENV])
+        update_recursive(self.kwargs, config[env])
 
     def __call__(self, cls):
         new_kwargs = self.kwargs
@@ -209,7 +208,3 @@ def create_sla_miss_statsd_metric(*args):
     sla = slas[0]
     dag_id = sla.dag_id
     Stats.incr(f"dagrun.{dag_id}.sla_miss")
-
-
-# ENV = Variable.get("ENV", default_var=Environment.local)
-ENV = Environment.local
